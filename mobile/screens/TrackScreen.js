@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, RefreshControl } from 'react-native';
 import { Platform } from 'react-native';
 
-// Use deployed Vercel backend (latest production URL)
-const BASE_URL = 'https://civic-issue-tracker-djyxnom2g-kanishksaini13-6637s-projects.vercel.app';
+// Local backend on LAN (update if your IP changes)
+const BASE_URL = 'http://10.12.75.192:5060';
 
 export default function TrackScreen({ navigation }) {
   const [issueId, setIssueId] = useState('');

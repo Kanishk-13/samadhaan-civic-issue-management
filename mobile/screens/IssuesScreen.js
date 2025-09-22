@@ -2,15 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, RefreshControl, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 
 // TODO: Set your backend base URL (use your laptop IP on same WiFi), e.g. 'http://192.168.1.10:5060'
-const BASE_URL = (() => {
-  // Platform is available in react-native runtime; detect web by checking window
-  const isWeb = typeof window !== 'undefined' && typeof document !== 'undefined';
-  if (isWeb) {
-    const host = window.location && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${host}:5060`;
-  }
-  return 'http://10.12.75.192:5060';
-})();
+const BASE_URL = 'http://10.12.75.192:5060';
 
 export default function IssuesScreen() {
   const [issues, setIssues] = useState([]);

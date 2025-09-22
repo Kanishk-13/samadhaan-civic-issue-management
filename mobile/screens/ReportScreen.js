@@ -7,8 +7,8 @@ import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
-// Use deployed Vercel backend (latest production URL)
-const BASE_URL = 'https://civic-issue-tracker-djyxnom2g-kanishksaini13-6637s-projects.vercel.app';
+// Local backend on LAN (update if your IP changes)
+const BASE_URL = 'http://10.12.75.192:5060';
 
 // Tap-to-call helpline number (change as needed)
 const HELPLINE_NUMBER = '112';
