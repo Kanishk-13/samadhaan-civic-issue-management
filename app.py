@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -10,10 +10,39 @@ import mimetypes
 from functools import wraps
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'jharkhand-civic-system-2024'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///civic_issues.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'jharkhand-civic-system-2024')
+
+# Detect serverless/Vercel environment
+IS_VERCEL = bool(os.environ.get('VERCEL'))
+
+# Database config: prefer DATABASE_URL (Postgres on Vercel), fallback to SQLite
+# On Vercel the filesystem is read-only except /tmp, so use /tmp for SQLite fallback
+default_sqlite = 'sqlite:////tmp/civic_issues.db' if IS_VERCEL else 'sqlite:///civic_issues.db'
+db_url = os.environ.get('DATABASE_URL', default_sqlite)
+# Normalize postgres scheme for SQLAlchemy if needed and sanitize query params for Neon
+if db_url.startswith('postgres://'):
+    db_url = db_url.replace('postgres://', 'postgresql+psycopg2://', 1)
+try:
+    from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+    parsed = urlparse(db_url)
+    # Work only on postgres URLs
+    if parsed.scheme.startswith('postgresql'):
+        q = dict(parse_qsl(parsed.query, keep_blank_values=True))
+        # Some environments add channel_binding=require which can fail on some platforms
+        if 'channel_binding' in q:
+            q.pop('channel_binding', None)
+        # Ensure sslmode=require for Neon
+        if q.get('sslmode') is None:
+            q['sslmode'] = 'require'
+        new_query = urlencode(q)
+        db_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+except Exception:
+    pass
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+# Use /tmp/uploads for non-Cloudinary uploads on Vercel to avoid read-only FS
+default_uploads = '/tmp/uploads' if IS_VERCEL else 'static/uploads'
+app.config['UPLOAD_FOLDER'] = default_uploads
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['ADMIN_USERNAME'] = os.environ.get('ADMIN_USERNAME', 'admin')
 app.config['ADMIN_PASSWORD'] = os.environ.get('ADMIN_PASSWORD', 'admin123')
@@ -25,8 +54,18 @@ mimetypes.add_type('audio/mpeg', '.mp3')
 mimetypes.add_type('audio/wav', '.wav')
 mimetypes.add_type('audio/3gpp', '.3gp')
 
-# Ensure upload directory exists
+# Ensure upload directory exists (no-op if using Cloudinary later)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Cloudinary config (auto-configured from CLOUDINARY_URL env if present)
+USE_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL'))
+if USE_CLOUDINARY:
+    try:
+        import cloudinary
+        import cloudinary.uploader
+        cloudinary.config()  # reads CLOUDINARY_URL
+    except Exception:
+        USE_CLOUDINARY = False
 
 db = SQLAlchemy(app)
 
@@ -76,6 +115,20 @@ class CivicVote(db.Model):
 def index():
     return render_template('index.html')
 
+# Lightweight health check
+@app.route('/health')
+def health():
+    try:
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify(status='ok'), 200
+    except Exception as e:
+        return jsonify(status='db_error', error=str(e)), 500
+
+# Serve uploaded files when not using Cloudinary
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -119,19 +172,27 @@ def submit_issue():
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename:
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4()}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                photo_filename = unique_filename
+                if USE_CLOUDINARY:
+                    up = cloudinary.uploader.upload(file, resource_type='image', folder='civic-issues')
+                    photo_filename = up.get('secure_url')
+                else:
+                    filename = secure_filename(file.filename)
+                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+                    photo_filename = unique_filename
 
         # Handle optional voice note upload
         if 'voice_note' in request.files:
             vfile = request.files['voice_note']
             if vfile and vfile.filename:
-                vname = secure_filename(vfile.filename)
-                unique_vname = f"{uuid.uuid4()}_{vname}"
-                vfile.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_vname))
-                voice_note_filename = unique_vname
+                if USE_CLOUDINARY:
+                    up2 = cloudinary.uploader.upload(vfile, resource_type='auto', folder='civic-issues')
+                    voice_note_filename = up2.get('secure_url')
+                else:
+                    vname = secure_filename(vfile.filename)
+                    unique_vname = f"{uuid.uuid4()}_{vname}"
+                    vfile.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_vname))
+                    voice_note_filename = unique_vname
 
         # Auto-assign department based on category
         category = request.form.get('category')
@@ -281,7 +342,24 @@ def get_issues():
         issues = query.all()
         
         issues_data = []
+        base = request.host_url.rstrip('/')
         for issue in issues:
+            # Build absolute URLs for media
+            if issue.photo_filename:
+                if str(issue.photo_filename).startswith('http'):
+                    photo_url = issue.photo_filename
+                else:
+                    photo_url = url_for('uploaded_file', filename=issue.photo_filename, _external=True)
+            else:
+                photo_url = None
+            if issue.voice_note_filename:
+                if str(issue.voice_note_filename).startswith('http'):
+                    voice_url = issue.voice_note_filename
+                else:
+                    voice_url = url_for('uploaded_file', filename=issue.voice_note_filename, _external=True)
+            else:
+                voice_url = None
+
             issues_data.append({
                 'id': issue.id,
                 'issue_id': issue.issue_id,
@@ -294,8 +372,10 @@ def get_issues():
                 'longitude': issue.longitude,
                 'address': issue.address,
                 'photo_filename': issue.photo_filename,
+                'photo_url': photo_url,
                 'short_note': issue.short_note,
                 'voice_note_filename': issue.voice_note_filename,
+                'voice_note_url': voice_url,
                 'citizen_name': issue.citizen_name,
                 'citizen_phone': issue.citizen_phone,
                 'citizen_email': issue.citizen_email,
@@ -492,3 +572,14 @@ if __name__ == '__main__':
         seed_departments_if_needed()
     port = int(os.environ.get('PORT', 5001))
     app.run(debug=True, host='0.0.0.0', port=port)
+
+# Ensure DB is ready on serverless platforms (e.g., Vercel) before first request
+@app.before_first_request
+def _init_db_on_first_request():
+    try:
+        with app.app_context():
+            db.create_all()
+            ensure_issue_extra_columns()
+            seed_departments_if_needed()
+    except Exception:
+        pass

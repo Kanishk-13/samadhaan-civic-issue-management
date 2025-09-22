@@ -2,15 +2,8 @@ import React from 'react';
 import { Platform, View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-// Compute the admin URL dynamically
-const ADMIN_URL = (() => {
-  if (Platform.OS === 'web') {
-    const host = typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${host}:5060/admin`;
-  }
-  // Native devices use the dev machine's LAN IP. Update if your IP changes.
-  return 'http://10.12.75.192:5060/admin';
-})();
+// Use deployed Vercel admin URL (latest production URL)
+const ADMIN_URL = 'https://civic-issue-tracker-djyxnom2g-kanishksaini13-6637s-projects.vercel.app/admin';
 
 export default function AdminScreen() {
   if (Platform.OS === 'web') {

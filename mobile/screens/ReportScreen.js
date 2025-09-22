@@ -1,20 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, ScrollView, Platform, Linking } from 'react-native';
+import Reveal from '../components/Reveal';
 import MapView, { Marker } from 'react-native-maps';
 import { Picker } from '@react-native-picker/picker';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
-// TODO: Set your backend base URL (use your laptop IP on same WiFi), e.g. 'http://192.168.1.10:5001'
-const BASE_URL = (() => {
-  if (Platform.OS === 'web') {
-    const host = typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${host}:5001`;
-  }
-  // Native devices should use the dev machine's LAN IP
-  return 'http://10.12.75.192:5001';
-})();
+// Use deployed Vercel backend (latest production URL)
+const BASE_URL = 'https://civic-issue-tracker-djyxnom2g-kanishksaini13-6637s-projects.vercel.app';
 
 // Tap-to-call helpline number (change as needed)
 const HELPLINE_NUMBER = '112';
@@ -157,17 +151,24 @@ export default function ReportScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.h1}>Report Issue</Text>
+      <Reveal delay={40}><Text style={styles.h1}>Report Issue</Text></Reveal>
 
-      <Text style={styles.label}>Your Name *</Text>
-      <TextInput style={styles.input} value={citizenName} onChangeText={setCitizenName} placeholder="Your full name" />
+      <Reveal delay={80}>
+        <Text style={styles.label}>Your Name *</Text>
+        <TextInput style={styles.input} value={citizenName} onChangeText={setCitizenName} placeholder="Your full name" />
+      </Reveal>
 
-      <Text style={styles.label}>Phone *</Text>
-      <TextInput style={styles.input} keyboardType="phone-pad" value={phone} onChangeText={setPhone} placeholder="Phone number" />
+      <Reveal delay={120}>
+        <Text style={styles.label}>Phone *</Text>
+        <TextInput style={styles.input} keyboardType="phone-pad" value={phone} onChangeText={setPhone} placeholder="Phone number" />
+      </Reveal>
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="Email (optional)" />
+      <Reveal delay={160}>
+        <Text style={styles.label}>Email</Text>
+        <TextInput style={styles.input} keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="Email (optional)" />
+      </Reveal>
 
+      <Reveal delay={200}>
       <Text style={styles.label}>Category *</Text>
       <View style={styles.pickerWrapper}>
         <Picker
@@ -183,19 +184,29 @@ export default function ReportScreen() {
           <Picker.Item label="Other" value="Other" />
         </Picker>
       </View>
+      </Reveal>
 
-      <Text style={styles.label}>Title *</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Brief title" />
+      <Reveal delay={240}>
+        <Text style={styles.label}>Title *</Text>
+        <TextInput style={styles.input} value={title} onChangeText={setTitle} placeholder="Brief title" />
+      </Reveal>
 
-      <Text style={styles.label}>Description *</Text>
-      <TextInput style={[styles.input, { height: 100 }]} value={description} onChangeText={setDescription} placeholder="Details" multiline />
+      <Reveal delay={280}>
+        <Text style={styles.label}>Description *</Text>
+        <TextInput style={[styles.input, { height: 100 }]} value={description} onChangeText={setDescription} placeholder="Details" multiline />
+      </Reveal>
 
-      <Text style={styles.label}>Short Note (optional)</Text>
-      <TextInput style={styles.input} value={shortNote} onChangeText={setShortNote} placeholder="One-liner or brief note" />
+      <Reveal delay={320}>
+        <Text style={styles.label}>Short Note (optional)</Text>
+        <TextInput style={styles.input} value={shortNote} onChangeText={setShortNote} placeholder="One-liner or brief note" />
+      </Reveal>
 
-      <Text style={styles.label}>Address</Text>
-      <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Address or description" />
+      <Reveal delay={360}>
+        <Text style={styles.label}>Address</Text>
+        <TextInput style={styles.input} value={address} onChangeText={setAddress} placeholder="Address or description" />
+      </Reveal>
 
+      <Reveal delay={400}>
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
         <TouchableOpacity style={styles.buttonOutline} onPress={useCurrentLocation}>
           <Text style={styles.buttonOutlineText}>Use GPS</Text>
@@ -204,8 +215,10 @@ export default function ReportScreen() {
           {coords.latitude ? `${coords.latitude.toFixed(4)}, ${coords.longitude?.toFixed(4)}` : ''}
         </Text>
       </View>
+      </Reveal>
 
       {/* Inline Map to pin location */}
+      <Reveal delay={440}>
       <View style={{ marginTop: 10, borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: '#e5e7eb' }}>
         <MapView
           style={{ width: '100%', height: 220 }}
@@ -240,11 +253,13 @@ export default function ReportScreen() {
         </MapView>
         <Text style={{ padding: 8, color: '#64748b' }}>Tap on the map to set the location. Use GPS to auto-locate.</Text>
       </View>
+      </Reveal>
 
       {photo && (
-        <Image source={{ uri: photo.uri }} style={{ width: '100%', height: 200, borderRadius: 10, marginTop: 10 }} />
+        <Reveal delay={480}><Image source={{ uri: photo.uri }} style={{ width: '100%', height: 200, borderRadius: 10, marginTop: 10 }} /></Reveal>
       )}
 
+      <Reveal delay={520}>
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
         <TouchableOpacity style={styles.button} onPress={takePhoto}>
           <Text style={styles.buttonText}>Take Photo</Text>
@@ -253,8 +268,10 @@ export default function ReportScreen() {
           <Text style={styles.buttonText}>Pick from Gallery</Text>
         </TouchableOpacity>
       </View>
+      </Reveal>
 
       {/* Helpline section */}
+      <Reveal delay={560}>
       <View style={{ marginTop: 16, padding: 12, borderRadius: 10, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e5e7eb' }}>
         <Text style={{ fontWeight: '700', marginBottom: 6 }}>Need immediate help?</Text>
         <Text style={{ color: '#475569', marginBottom: 10 }}>Call our civic helpline for urgent assistance.</Text>
@@ -265,8 +282,10 @@ export default function ReportScreen() {
           <Text style={styles.buttonText}>Call Helpline ({HELPLINE_NUMBER})</Text>
         </TouchableOpacity>
       </View>
+      </Reveal>
 
       {/* Voice note recorder */}
+      <Reveal delay={600}>
       <View style={{ marginTop: 16, padding: 12, borderRadius: 10, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e5e7eb' }}>
         <Text style={{ fontWeight: '700', marginBottom: 6 }}>Add Voice Note (optional)</Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -324,10 +343,12 @@ export default function ReportScreen() {
         </View>
         {recordedUri ? <Text style={{ marginTop: 8, color: '#475569' }}>Attached: {recordedUri.split('/').pop()}</Text> : null}
       </View>
-
-      <TouchableOpacity style={[styles.button, { marginTop: 20, opacity: submitting ? 0.7 : 1 }]} disabled={submitting} onPress={submit}>
-        <Text style={styles.buttonText}>{submitting ? 'Submitting...' : 'Submit Issue'}</Text>
-      </TouchableOpacity>
+      </Reveal>
+      <Reveal delay={640}>
+        <TouchableOpacity style={[styles.button, { marginTop: 20, opacity: submitting ? 0.7 : 1 }]} disabled={submitting} onPress={submit}>
+          <Text style={styles.buttonText}>{submitting ? 'Submitting...' : 'Submit Issue'}</Text>
+        </TouchableOpacity>
+      </Reveal>
 
       <Text style={{ color: '#6b7280', fontSize: 12, marginTop: 12 }}>Backend: {BASE_URL}</Text>
     </ScrollView>

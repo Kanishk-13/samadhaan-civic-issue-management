@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jharkhand Civic Issue Reporter</title>
+    <title>Samaadhan</title>
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,6 +11,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" rel="stylesheet">
     <style>
+        /* Scroll reveal base */
+        .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+        .reveal.reveal-visible { opacity: 1; transform: translateY(0); }
         * {
             margin: 0;
             padding: 0;
@@ -100,9 +103,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .main-content {
-            padding: 2rem 0;
-        }
+        .main-content { padding: 2rem 0; }
 
         .hero {
             text-align: center;
@@ -163,11 +164,7 @@
             background: white;
         }
 
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
 
         textarea {
             resize: vertical;
@@ -272,11 +269,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .feature-card i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: #ffd700;
-        }
+        .feature-card i { font-size: 3rem; margin-bottom: 1rem; color: #ffd700; }
 
         .feature-card h3 {
             margin-bottom: 1rem;
@@ -328,12 +321,12 @@
     </style>
 </head>
 <body>
-    <header class="header">
+    <header class="header reveal">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-city"></i>
-                    <h1>Jharkhand Civic Reporter</h1>
+                    <h1>Samaadhan</h1>
                 </div>
                 <div class="nav-buttons">
                     <a href="#report-form" class="btn btn-primary">
@@ -349,12 +342,12 @@
 
     <main class="main-content">
         <div class="container">
-            <div class="hero">
+            <div class="hero reveal">
                 <h2>Report Civic Issues in Your Community</h2>
                 <p>Help make Jharkhand cleaner and better by reporting civic issues like potholes, broken streetlights, waste management problems, and more.</p>
             </div>
 
-            <div class="card" id="report-form">
+            <div class="card reveal" id="report-form">
                 <h3 style="text-align: center; margin-bottom: 2rem; color: #333; font-size: 1.8rem;">
                     <i class="fas fa-exclamation-triangle" style="color: #ff6b6b;"></i>
                     Report a Civic Issue
@@ -376,7 +369,7 @@
 
                         <div class="form-group">
                             <label for="citizen_phone">Phone Number *</label>
-                            <input type="tel" id="citizen_phone" name="citizen_phone" required>
+                            <input type="tel" id="citizen_phone" name="citizen_phone" required inputmode="numeric" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit number">
                         </div>
 
                         <div class="form-group">
@@ -476,22 +469,22 @@
             </div>
 
             <div class="features">
-                <div class="feature-card">
+                <div class="feature-card reveal" style="transition-delay: .05s;">
                     <i class="fas fa-mobile-alt"></i>
                     <h3>Mobile Friendly</h3>
                     <p>Report issues on the go with our mobile-optimized interface</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal" style="transition-delay: .15s;">
                     <i class="fas fa-map-marker-alt"></i>
                     <h3>GPS Location</h3>
                     <p>Automatic location detection for precise issue reporting</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal" style="transition-delay: .25s;">
                     <i class="fas fa-clock"></i>
                     <h3>Real-time Tracking</h3>
                     <p>Track the status of your reported issues in real-time</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal" style="transition-delay: .35s;">
                     <i class="fas fa-users"></i>
                     <h3>Community Driven</h3>
                     <p>Help build a better community through collective reporting</p>
@@ -590,11 +583,27 @@
             }
         }
 
+        // Enforce numeric-only phone input (max 10 digits)
+        (function(){
+            const phone = document.getElementById('citizen_phone');
+            if (phone) {
+                phone.addEventListener('input', (e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    if (e.target.value !== digits) e.target.value = digits;
+                });
+            }
+        })();
+
         // Form submission
         document.getElementById('issue-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = new FormData(this);
+            const phone = (document.getElementById('citizen_phone').value || '').trim();
+            if (!/^\d{10}$/.test(phone)) {
+                showAlert('error', 'Please enter a valid 10-digit phone number.');
+                return;
+            }
             // If we recorded audio, prefer attaching that as voice_note
             if (voiceBlob && !formData.get('voice_note')) {
                 formData.append('voice_note', voiceBlob, 'voice_note.webm');
@@ -665,6 +674,50 @@
                 });
             });
         }
+
+        // Scroll Reveal using IntersectionObserver
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-tag elements for reveal with staggered delays
+            const targets = [
+                ...document.querySelectorAll('.form-grid .form-group'),
+                ...document.querySelectorAll('.location-section'),
+                ...document.querySelectorAll('#map'),
+                ...document.querySelectorAll('.submit-section'),
+                ...document.querySelectorAll('.nav-buttons a')
+            ];
+            targets.forEach((el, idx) => {
+                el.classList.add('reveal');
+                // Stagger: 60ms steps, start at 80ms for smoother entry
+                el.style.transitionDelay = `${80 + idx * 60}ms`;
+            });
+
+            const els = Array.from(document.querySelectorAll('.reveal'));
+            if (!('IntersectionObserver' in window) || els.length === 0) {
+                els.forEach(el => el.classList.add('reveal-visible'));
+                return;
+            }
+            // Show immediately if already in view (above the fold)
+            const inView = (el) => {
+                const r = el.getBoundingClientRect();
+                return r.top < (window.innerHeight * 0.92) && r.bottom > 0; 
+            };
+            // Add a tiny delay so CSS transition can kick in for above-the-fold elements
+            els.forEach(el => {
+                if (inView(el)) {
+                    setTimeout(() => el.classList.add('reveal-visible'), 80);
+                }
+            });
+
+            const io = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('reveal-visible');
+                        io.unobserve(entry.target);
+                    }
+                });
+            }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.01 });
+            els.filter(el => !el.classList.contains('reveal-visible')).forEach(el => io.observe(el));
+        });
     </script>
 </body>
 </html>

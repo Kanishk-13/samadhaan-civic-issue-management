@@ -509,18 +509,21 @@
                         <label>Date To</label>
                         <input type="date" id="date-to" />
                     </div>
-                    <div class="filter-group" style="min-width:220px;">
-                        <label>Address contains</label>
-                        <input type="text" id="address-filter" placeholder="e.g. Main Street" />
+                    <div class="filter-group" style="min-width:320px;">
+                        <label>Address</label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="text" id="address-filter" placeholder="Type an address (e.g. Main Street, Ranchi)" style="flex:1" />
+                            <button class="btn btn-light btn-sm" type="button" id="use-map-center" title="Fill with map center address">Use Center Address</button>
+                        </div>
                     </div>
-                    <div class="filter-group" style="min-width:260px;">
+                    <!-- Old geo radius inputs are hidden but kept for backward compatibility -->
+                    <div class="filter-group" style="display:none;">
                         <label>Location (lat, lon, km)</label>
                         <div style="display:flex; gap:6px;">
-                            <input type="number" id="lat-filter" step="0.0001" placeholder="lat" style="width:33%" />
-                            <input type="number" id="lon-filter" step="0.0001" placeholder="lon" style="width:33%" />
-                            <input type="number" id="radius-filter" step="0.1" min="0" placeholder="km" style="width:34%" />
+                            <input type="number" id="lat-filter" step="0.0001" placeholder="lat" />
+                            <input type="number" id="lon-filter" step="0.0001" placeholder="lon" />
+                            <input type="number" id="radius-filter" step="0.1" min="0" placeholder="km" />
                         </div>
-                        <button class="btn btn-light btn-sm" type="button" id="use-map-center" style="margin-top:6px;">Use Map Center</button>
                     </div>
                     <div class="filter-group" style="align-self:flex-end;">
                         <button class="btn btn-light" type="button" id="clear-filters">Clear Filters</button>
@@ -819,20 +822,33 @@
             document.getElementById('date-from').addEventListener('change', loadIssues);
             document.getElementById('date-to').addEventListener('change', loadIssues);
             document.getElementById('address-filter').addEventListener('input', debounce(loadIssues, 400));
-            document.getElementById('lat-filter').addEventListener('change', loadIssues);
-            document.getElementById('lon-filter').addEventListener('change', loadIssues);
-            document.getElementById('radius-filter').addEventListener('change', loadIssues);
+            if (document.getElementById('lat-filter')) document.getElementById('lat-filter').addEventListener('change', loadIssues);
+            if (document.getElementById('lon-filter')) document.getElementById('lon-filter').addEventListener('change', loadIssues);
+            if (document.getElementById('radius-filter')) document.getElementById('radius-filter').addEventListener('change', loadIssues);
 
-            // Use map center button
+            // Use map center to populate Address filter (reverse geocode)
             document.getElementById('use-map-center').addEventListener('click', function() {
                 if (!map) return;
                 const center = map.getCenter();
-                document.getElementById('lat-filter').value = center.lat.toFixed(4);
-                document.getElementById('lon-filter').value = center.lng.toFixed(4);
-                if (!document.getElementById('radius-filter').value) {
-                    document.getElementById('radius-filter').value = 2; // default 2 km
-                }
-                loadIssues();
+                // Clear geo radius filters when using address
+                document.getElementById('lat-filter').value = '';
+                document.getElementById('lon-filter').value = '';
+                document.getElementById('radius-filter').value = '';
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${center.lat}&lon=${center.lng}`)
+                  .then(r => r.json())
+                  .then(data => {
+                      if (data && data.display_name) {
+                          document.getElementById('address-filter').value = data.display_name;
+                      } else {
+                          document.getElementById('address-filter').value = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+                      }
+                      loadIssues();
+                  })
+                  .catch(_ => {
+                      // Fallback to coordinates as text if reverse geocode fails
+                      document.getElementById('address-filter').value = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+                      loadIssues();
+                  });
             });
 
             // Clear filters

@@ -53,8 +53,8 @@ export default function IssueDetails({ route }) {
     );
   }
 
-  const photoUri = issue.photo_filename ? `${baseUrl}/static/uploads/${issue.photo_filename}` : null;
-  const voiceUri = issue.voice_note_filename ? `${baseUrl}/static/uploads/${issue.voice_note_filename}` : null;
+  const photoUri = issue.photo_url || (issue.photo_filename ? `${baseUrl}/uploads/${issue.photo_filename}` : null);
+  const voiceUri = issue.voice_note_url || (issue.voice_note_filename ? `${baseUrl}/uploads/${issue.voice_note_filename}` : null);
 
   const togglePlayback = async () => {
     try {

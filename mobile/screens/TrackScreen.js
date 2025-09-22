@@ -2,14 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, RefreshControl } from 'react-native';
 import { Platform } from 'react-native';
 
-// TODO: Set your backend base URL (use your laptop IP on same WiFi), e.g. 'http://192.168.1.10:5001'
-const BASE_URL = (() => {
-  if (Platform.OS === 'web') {
-    const host = typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : 'localhost';
-    return `http://${host}:5001`;
-  }
-  return 'http://10.12.75.192:5001';
-})();
+// Use deployed Vercel backend (latest production URL)
+const BASE_URL = 'https://civic-issue-tracker-djyxnom2g-kanishksaini13-6637s-projects.vercel.app';
 
 export default function TrackScreen({ navigation }) {
   const [issueId, setIssueId] = useState('');
@@ -21,10 +15,19 @@ export default function TrackScreen({ navigation }) {
   const fetchIssues = async () => {
     try {
       const res = await fetch(`${BASE_URL}/api/issues`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${text.slice(0, 180)}`);
+      }
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(`Unexpected response (not JSON): ${text.slice(0, 180)}`);
+      }
       const list = await res.json();
-      setIssues(list);
+      setIssues(Array.isArray(list) ? list : []);
     } catch (e) {
-      Alert.alert('Network error', e.message);
+      Alert.alert('Network error', String(e.message || e));
     }
   };
 
@@ -43,6 +46,15 @@ export default function TrackScreen({ navigation }) {
     setLoading(true);
     try {
       const res = await fetch(`${BASE_URL}/api/issues`);
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${text.slice(0, 180)}`);
+      }
+      if (!contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(`Unexpected response (not JSON): ${text.slice(0, 180)}`);
+      }
       const list = await res.json();
       const found = list.find((i) => i.issue_id === issueId.trim());
       if (!found) {
@@ -51,7 +63,7 @@ export default function TrackScreen({ navigation }) {
         navigation.navigate('IssueDetails', { issue: found, baseUrl: BASE_URL });
       }
     } catch (e) {
-      Alert.alert('Network error', e.message);
+      Alert.alert('Network error', String(e.message || e));
     } finally {
       setLoading(false);
     }
