@@ -1,6 +1,6 @@
-# Jharkhand Civic Issue Reporter
+#Civic Issue Reporter
 
-A comprehensive crowdsourced civic issue reporting and resolution system designed for the Government of Jharkhand. This platform enables citizens to report civic issues like potholes, broken streetlights, waste management problems, and more, while providing administrators with powerful tools to manage and resolve these issues efficiently.
+A comprehensive crowdsourced civic issue reporting and resolution system designed for the Government. This platform enables citizens to report civic issues like potholes, broken streetlights, waste management problems, and more, while providing administrators with powerful tools to manage and resolve these issues efficiently.
 
 ## 🌟 Features
 
@@ -217,28 +217,3 @@ For technical support or questions about the system:
 - Check the documentation
 - Review the code comments
 - Test the application thoroughly before deployment
-
-## 🎉 Hackathon Presentation Points
-
-### Problem Solved
-- **Inefficient civic issue reporting**: Citizens often struggle to report civic problems effectively
-- **Poor tracking and follow-up**: No systematic way to track issue resolution
-- **Lack of transparency**: Citizens don't know the status of their reported issues
-- **Manual processes**: Administrative burden on government staff
-
-### Solution Benefits
-- **Streamlined reporting**: Easy-to-use mobile interface for citizens
-- **Automated routing**: Issues automatically assigned to relevant departments
-- **Real-time tracking**: Citizens and administrators can monitor progress
-- **Data-driven insights**: Analytics help identify patterns and prioritize resources
-- **Improved accountability**: Transparent process with status updates
-- **Cost-effective**: Web-based solution requiring minimal infrastructure
-
-### Technical Highlights
-- **Responsive design**: Works on all devices (mobile, tablet, desktop)
-- **Real-time updates**: Live dashboard with instant data refresh
-- **Scalable architecture**: Can handle increasing number of users and issues
-- **User-friendly interface**: Intuitive design for both citizens and administrators
-- **Comprehensive analytics**: Charts and statistics for informed decision-making
-
-This system demonstrates how technology can bridge the gap between citizens and government, creating a more responsive and accountable civic administration for Jharkhand.
