@@ -174,19 +174,6 @@ The admin dashboard provides:
 - `admin_notes`: Administrative notes
 - `created_at/updated_at`: Timestamps
 
-## 🚀 Deployment Options
-
-### Local Development
-- Use the built-in Flask development server
-- SQLite database for simplicity
-
-### Production Deployment
-- Use a production WSGI server (Gunicorn, uWSGI)
-- Upgrade to PostgreSQL or MySQL for better performance
-- Add authentication and authorization
-- Implement proper logging and monitoring
-- Use environment variables for configuration
-
 ## 🔒 Security Considerations
 
 For production deployment, consider:
