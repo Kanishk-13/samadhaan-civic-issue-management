@@ -564,22 +564,20 @@ def seed_departments_if_needed():
             db.session.add(dept)
         db.session.commit()
 
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Auto-migrate new columns if needed
-        ensure_issue_extra_columns()
-        seed_departments_if_needed()
-    port = int(os.environ.get('PORT', 5001))
-    app.run(debug=True, host='0.0.0.0', port=port)
-
-# Ensure DB is ready on serverless platforms (e.g., Vercel) before first request
-@app.before_first_request
-def _init_db_on_first_request():
+def init_db():
+    """Ensure DB and schema are ready (works locally and on Vercel)."""
     try:
         with app.app_context():
             db.create_all()
             ensure_issue_extra_columns()
             seed_departments_if_needed()
-    except Exception:
-        pass
+    except Exception as e:
+        app.logger.warning(f"Database initialization deferred/warning: {e}")
+
+# Initialize DB on module import
+init_db()
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)
+
