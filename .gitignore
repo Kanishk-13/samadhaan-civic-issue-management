@@ -18,3 +18,4 @@ static/uploads/
 dist/
 build/
 *.local
+.env
